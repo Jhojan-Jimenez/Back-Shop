@@ -1,0 +1,17 @@
+# Django-specific
+.DS_Store
+.idea/
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+media/
+static/
+venv/
+
+# Other common patterns
+node_modules/
+*.swp
+*.tmp
+*~
