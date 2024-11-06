@@ -19,7 +19,15 @@ from django.urls import path, include
 
 urlpatterns = [
     path('api/category/', include('apps.category.urls')),
-    path('api/user', include('apps.user.urls')),
+    path('api/product/', include('apps.product.urls')),
+    path('api/cart/', include('apps.cart.urls')),
+    path('api/user/', include('apps.user.urls')),
+    path('api/shipping/', include('apps.shipping.urls')),
+    path('api/orders/', include('apps.orders.urls')),
+    path('api/payment/', include('apps.payment.urls')),
+    path('api/coupons/', include('apps.coupons.urls')),
+    path('api/wishlist/', include('apps.wishlist.urls')),
+    path('api/reviews/', include('apps.reviews.urls')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
     path('auth/', include('djoser.social.urls')),

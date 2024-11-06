@@ -40,7 +40,8 @@ ECOMMERCE_APPS = []
 THIRD_APPS = ['rest_framework', 'djoser', 'corsheaders',
               'rest_framework_simplejwt', 'rest_framework_simplejwt.token_blacklist', "rest_framework.authtoken", 'social_django']
 
-PROJECT_APPS = ['apps.user', 'apps.category']
+PROJECT_APPS = ['apps.user', 'apps.category',
+                'apps.product', 'apps.cart', 'apps.shipping', 'apps.orders', 'apps.payment', 'apps.coupons', 'apps.wishlist', 'apps.reviews']
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + ECOMMERCE_APPS + THIRD_APPS
 
