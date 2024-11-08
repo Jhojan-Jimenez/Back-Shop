@@ -44,6 +44,9 @@ class UserAccount(AbstractBaseUser):
 
     def get_full_name(self):
         return f"{self.first_name} {self.last_name}"
+    
+    def get_short_name(self):
+        return self.first_name
 
     def has_perm(self, perm, obj=None):
         return True

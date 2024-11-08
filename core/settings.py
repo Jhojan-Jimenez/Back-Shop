@@ -11,6 +11,33 @@ from datetime import timedelta
 import dj_database_url
 import os
 import environ
+import logging
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
 
 env = environ.Env()
 environ.Env.read_env()
@@ -22,8 +49,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', "False").lower() == "true"
-
+# DEBUG = os.environ.get('DEBUG', "False").lower() == "true"
+DEBUG = False
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(" ")
 
 
@@ -195,10 +222,10 @@ AUTH_USER_MODEL = "user.UserAccount"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 if not DEBUG:
-    DEFAULT_FROM_EMAIL = 'Vudera Academia de Software <mail@vudera.com>'
+    DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = env('EMAIL_HOST')
     EMAIL_HOST_USER = env('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
     EMAIL_PORT = env('EMAIL_PORT')
-    EMAIL_USE_TLS = env('EMAIL_USE_TLS')
+    EMAIL_USE_TLS = True
