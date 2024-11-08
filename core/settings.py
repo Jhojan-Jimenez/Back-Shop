@@ -8,6 +8,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
 import os
 import environ
 
@@ -21,10 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', "False").lower() == "true"
 
-ALLOWED_HOSTS = ["127.0.0.1",
-                 "localhost:3000"]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(" ")
+
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -82,7 +83,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': env.db("DATABASE_URL", default="postgres:///e-commerce")
+    'default': dj_database_url.parse(env("DEPLOY_DATABASE_URL"))
 }
 
 CORS_ORIGIN_WHITELIST = [
