@@ -11,33 +11,6 @@ from datetime import timedelta
 import dj_database_url
 import os
 import environ
-import logging
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-        },
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-        'django': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-        },
-    },
-}
-
 
 env = environ.Env()
 environ.Env.read_env()
@@ -116,13 +89,17 @@ DATABASES = {
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:8000'
+    'http://127.0.0.1:8000',
+    "https://mortshop.onrender.com",
+    "https://front-django-lemon.vercel.app"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:8000'
+    'http://127.0.0.1:8000',
+    "https://mortshop.onrender.com",
+    "https://front-django-lemon.vercel.app"
 ]
 
 PASSWORD_HASHERS = [
@@ -158,6 +135,7 @@ SIMPLE_JWT = {
     )
 }
 
+
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'USER_CREATE_PASSWORD_RETYPE': True,
@@ -171,8 +149,7 @@ DJOSER = {
     'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}',
     'ACTIVATION_URL': 'activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': True,
-    'SOCIAL_AUTH_TOKEN_STRATEGY': 'djoser.social.token.jwt.TokenStrategy',
-    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': ['http://127.0.0.1:8000/google', 'http://127.0.0.1:8000/facebook'],
+    "EMAIL_FRONTEND_DOMAIN": env("FRONTEND_URL"),
     'SERIALIZERS': {
         'user_create': 'apps.user.serializers.UserCreateSerializer',
         'user': 'apps.user.serializers.UserCreateSerializer',
@@ -180,6 +157,7 @@ DJOSER = {
         'user_delete': 'djoser.serializers.UserDeleteSerializer',
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
