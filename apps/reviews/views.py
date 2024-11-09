@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from apps.product.models import Product
 from .models import Review
+from apps.orders.models import OrderItem
 
 
 class GetProductReviewsView(APIView):
@@ -127,6 +128,11 @@ class CreateProductReviewView(APIView):
                 )
 
             product = Product.objects.get(id=productId)
+            if not OrderItem.objects.filter(order__user=user, product_id=productId).exists():
+                return Response(
+                    {'error': 'You must have purchased this product to review it'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             result = {}
             results = []
@@ -224,10 +230,14 @@ class UpdateProductReviewView(APIView):
                 )
 
             if Review.objects.filter(user=user, product=product).exists():
-                Review.objects.filter(user=user, product=product).update(
-                    rating=rating,
-                    comment=comment
-                )
+
+                review = Review.objects.filter(
+                    user=user, product=product).first()
+
+                if review:
+                    review.rating = rating
+                    review.comment = comment
+                    review.save()
 
                 review = Review.objects.get(user=user, product=product)
 
