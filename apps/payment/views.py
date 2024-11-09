@@ -307,16 +307,18 @@ class ProcessPaymentView(APIView):
                 send_mail(
                     'Your Order Details',
                     'Hey ' + full_name + ','
-                    + '\n\nWe recieved your order!'
+                    + '\n\nWe received your order!'
                     + '\n\nGive us some time to process your order and ship it out to you.'
                     + '\n\nYou can go on your user dashboard to check the status of your order.'
                     + '\n\nSincerely,'
                     + '\nShop Time',
-                    'TailShop.com',
+                    'carlosmortshop@gmail.com',  # Cambia esto a una dirección de correo válida
                     [user.email],
                     fail_silently=False
                 )
-            except:
+
+            except Exception as e:
+                print(e)
                 return Response(
                     {'error': 'Transaction succeeded and order created, but failed to send email'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
