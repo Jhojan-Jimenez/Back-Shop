@@ -17,15 +17,15 @@ class ProductManager(models.Manager):
                 temp_file = ContentFile(photo.read())
                 response = upload_image_to_api(
                     temp_file, name=name, description=description)
-                
+
                 if response.status_code in [200, 201]:
                     product.photo = response.json().get('data').get('link')
+                    print(product.photo)
                     product.save()
 
             return product
         except Exception as e:
             print(e)
-            
 
 
 class Product(models.Model):
