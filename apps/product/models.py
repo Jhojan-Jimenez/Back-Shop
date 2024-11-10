@@ -20,7 +20,6 @@ class ProductManager(models.Manager):
 
                 if response.status_code in [200, 201]:
                     product.photo = response.json().get('data').get('link')
-                    print(product.photo)
                     product.save()
 
             return product
