@@ -123,21 +123,9 @@ DATABASES = {
     'default': dj_database_url.parse(env("DEPLOY_DATABASE_URL"))
 }
 
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8000',
-    "https://mortshop.onrender.com",
-    "https://front-django-lemon.vercel.app"
-]
+CORS_ORIGIN_WHITELIST = os.environ.get('CORS_URLS').split(" ")
 
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:8000',
-    "https://mortshop.onrender.com",
-    "https://front-django-lemon.vercel.app"
-]
+CSRF_TRUSTED_ORIGINS = os.environ.get('CORS_URLS').split(" ")
 
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",

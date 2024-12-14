@@ -263,22 +263,24 @@ class ListBySearchView(APIView):
                         category__in=filtered_categories)
 
         # Filtrar por precio
-        if price_range == '10000 - 20000':
-            product_results = product_results.filter(price__gte=10000)
-            product_results = product_results.filter(price__lt=20000)
-        elif price_range == '20000 - 40000':
-            product_results = product_results.filter(price__gte=20000)
-            product_results = product_results.filter(price__lt=40000)
-        elif price_range == '40000 - 60000':
-            product_results = product_results.filter(price__gte=40000)
-            product_results = product_results.filter(price__lt=60000)
-        elif price_range == '60000 - 80000':
-            product_results = product_results.filter(price__gte=60000)
-            product_results = product_results.filter(price__lt=80000)
-        elif price_range == 'More than 80000':
-            product_results = product_results.filter(price__gte=80000)
-        else:
+        if not price_range or not isinstance(price_range, str):
             product_results = product_results.all()
+
+        else:
+            price_range = price_range.split(" ")
+
+            if len(price_range) > 1 and price_range[0] == "More":
+                product_results = product_results.filter(
+                    price__gte=int(price_range[2]))
+
+            elif len(price_range) == 3 and price_range[1] == "-":
+                product_results = product_results.filter(
+                    price__gte=int(price_range[0]),
+                    price__lt=int(price_range[2])
+                )
+
+            else:
+                product_results = product_results.all()
 
         # Filtrar producto por sort_by
         if order == 'desc':
