@@ -2,12 +2,34 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from apps.cart.models import Cart, CartItem
+from apps.wishlist.serializers import WishListItemSerializer
+from core.views import AuthenticatedAPIView
 from .models import WishList, WishListItem
 from apps.product.models import Product
 from apps.product.serializers import ProductSerializer
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.types import OpenApiTypes
 
 
-class GetItemsView(APIView):
+class GetItemsView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Get all products in user's wishlist",
+        responses={200:  WishListItemSerializer(many=True),
+                   **AuthenticatedAPIView.get_auth_responses(),
+                   404: {
+
+            "type": "object",
+            "properties": {
+                    "error": {"type": "string"}
+            },
+            "example": [
+                {"error": "This product does not exist"}
+            ]
+
+        },
+            **AuthenticatedAPIView.get_500_errors(),
+        },
+    )
     def get(self, request, format=None):
         user = self.request.user
 
@@ -36,7 +58,44 @@ class GetItemsView(APIView):
             )
 
 
-class AddItemView(APIView):
+class AddItemView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Add product to user's wishlist",
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "product_id": {"type": "integer", "example": 0},
+                },
+                "required": ["product_id"]
+            }
+        },
+        responses={200:  WishListItemSerializer(many=True),
+                   **AuthenticatedAPIView.get_auth_responses(),
+                   404: {
+
+            "type": "object",
+            "properties": {
+                    "error": {"type": "string"}
+            },
+            "example": [
+                {"error": "This product does not exist"},
+                {'error': 'Product ID must be an integer'},
+            ]
+
+        },
+            409: {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+            "example":
+                       {'error': 'Item already in wishlist'}
+        },
+            **AuthenticatedAPIView.get_500_errors(),
+
+        },
+    )
     def post(self, request, format=None):
         user = self.request.user
         data = self.request.data
@@ -117,7 +176,26 @@ class AddItemView(APIView):
             )
 
 
-class ExistItemView(APIView):
+class ExistItemView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Search if product exists in user's wishlist",
+        responses={200:  {
+            "type": "boolean", "example": False},
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+
+                "type": "object",
+                "properties": {
+                        "error": {"type": "string"}
+                },
+            "example":
+                {'error': 'Product ID must be an integer'},
+
+
+        },
+            **AuthenticatedAPIView.get_500_errors(),
+        },
+    )
     def get(self, request, productId, format=None):
         user = self.request.user
         try:
@@ -147,7 +225,26 @@ class ExistItemView(APIView):
             )
 
 
-class RemoveItemView(APIView):
+class RemoveItemView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Remove product from user's wishlist",
+        responses={200:  WishListItemSerializer(many=True),
+                   **AuthenticatedAPIView.get_auth_responses(),
+                   404: {
+
+            "type": "object",
+            "properties": {
+                    "error": {"type": "string"}
+            },
+            "example": [
+                {'error': 'Product ID must be an integer'}, {
+                    'error': 'Product with this ID does not exist'}, {'error': 'This product is not in your wishlist'},
+
+            ]
+        },
+            **AuthenticatedAPIView.get_500_errors(),
+        },
+    )
     def delete(self, request, productId, format=None):
         user = self.request.user
 

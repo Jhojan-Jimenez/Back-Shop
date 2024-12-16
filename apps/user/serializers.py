@@ -2,7 +2,7 @@ from djoser.serializers import UserCreateSerializer
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
-#Obtiene el modelo que nosotros hicimos, dado que en csetting, extablecimos AUTH_USER_MODEL como nuestro modelo
+# Obtiene el modelo que nosotros hicimos, dado que en csetting, extablecimos AUTH_USER_MODEL como nuestro modelo
 User = get_user_model()
 
 

@@ -71,7 +71,7 @@ DJANGO_APPS = [
 ECOMMERCE_APPS = []
 
 THIRD_APPS = ['rest_framework', 'djoser', 'corsheaders',
-              'rest_framework_simplejwt', 'rest_framework_simplejwt.token_blacklist', "rest_framework.authtoken", 'social_django']
+              'rest_framework_simplejwt', 'rest_framework_simplejwt.token_blacklist', "rest_framework.authtoken", 'social_django', 'drf_spectacular',]
 
 PROJECT_APPS = ['apps.user', 'apps.category',
                 'apps.product', 'apps.cart', 'apps.shipping', 'apps.orders', 'apps.payment', 'apps.coupons', 'apps.wishlist', 'apps.reviews']
@@ -136,12 +136,14 @@ PASSWORD_HASHERS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly'
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
@@ -181,6 +183,29 @@ DJOSER = {
         'current_user': 'apps.user.serializers.UserCreateSerializer',
         'user_delete': 'djoser.serializers.UserDeleteSerializer',
     }
+}
+
+SPECTACULAR_SETTINGS = {
+    'DEFAULT_SCHEMA_CLASS': "core.views.CustomAutoSchema",
+    'TITLE': 'MortShop API',
+    'DESCRIPTION': 'API para gestionar un e-commerce moderno con funcionalidades como gestión de productos, autenticación segura, integración con servicios de terceros (Brevo para correos y Imgur para imágenes) y consultas optimizadas en PostgreSQL. Desarrollada con Django y accesible en mortshop.onrender.com.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': '/api',
+    'SECURITY': [
+        {'BearerAuth': []},  # Add BearerAuth globally
+    ],
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+    'COMPONENTS': {
+        'securitySchemes': {
+            'BearerAuth': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            },
+        },
+    },
 }
 
 

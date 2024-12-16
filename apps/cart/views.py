@@ -1,15 +1,25 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
+from core.views import AuthenticatedAPIView
 from .models import Cart, CartItem
-
 from apps.product.models import Product
 from apps.product.serializers import ProductSerializer
 from apps.wishlist.models import WishList, WishListItem
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+from .Serializers import CartItemsResponseSerializer
 
 
-class GetItemsView(APIView):
+class GetItemsView(AuthenticatedAPIView):
+
+    @extend_schema(
+        description="Get all items in the user cart",
+        responses={
+            200: CartItemsResponseSerializer,
+            **AuthenticatedAPIView.get_auth_responses(),
+            **AuthenticatedAPIView.get_500_errors(),
+        }
+    )
     def get(self, request, format=None):
         user = request.user
         try:
@@ -38,7 +48,67 @@ class GetItemsView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class AddItemsView(APIView):
+class AddItemsView(AuthenticatedAPIView):
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "product_id",
+                type=OpenApiTypes.INT,
+                required=True,
+                description="ID of the product to add to the cart.",
+            )
+        ],
+        description="Add a product to the user cart",
+        responses={
+            200: {
+
+                    "type": "object",
+                            "properties": {
+                                "message": {"type": "string"}
+                            },
+                "example": {
+                    "message": "Product successfully added to your cart"
+                            }
+
+            },
+            400: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Product ID must be an integer"
+                }
+
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Product with this ID does not exist"
+                }
+
+            },
+            409: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Not enough of this item in stock"
+                }
+
+            },
+            **AuthenticatedAPIView.get_500_errors(),
+        },
+    )
     def post(self, request, format=None):
         user = request.user
         data = request.data
@@ -95,7 +165,24 @@ class AddItemsView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class GetTotalView(APIView):
+class GetTotalView(AuthenticatedAPIView):
+
+    @extend_schema(
+        description="Get the total cost of items in the cart",
+        responses={
+            200: {
+
+                    "type": "integer",
+
+                "example": {
+                    "total_cost": "195000"
+                }
+
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            **AuthenticatedAPIView.get_500_errors(),
+        }
+    )
     def get(self, request, format=None):
         user = request.user
 
@@ -114,12 +201,30 @@ class GetTotalView(APIView):
                 {'total_cost': total},
                 status=status.HTTP_200_OK)
         except Exception as e:
+            print(e)
             return Response(
                 {'error': e},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class GetItemsTotalView(APIView):
+class GetItemsTotalView(AuthenticatedAPIView):
+
+    @extend_schema(
+        description="Get the total number of items in the cart",
+        responses={
+            200: {
+
+                    "type": "integer",
+
+                "example": {
+                    "total_items": "10"
+                }
+
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            **AuthenticatedAPIView.get_500_errors(),
+        }
+    )
     def get(self, request, format=None):
         user = request.user
         try:
@@ -134,7 +239,34 @@ class GetItemsTotalView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class UpdateItemView(APIView):
+class UpdateItemView(AuthenticatedAPIView):
+
+    @extend_schema(
+        description="Update the count of a product in the cart",
+        responses={
+            200: CartItemsResponseSerializer,
+            **AuthenticatedAPIView.get_auth_responses(),
+            403: {
+
+                    "type": "object",
+                            "properties": {
+                                "error": {"type": "string"}
+                            },
+                "example": {"error": "Not enough of this item in stock"}
+
+            },
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {"error": "Product with this ID does not exist"}
+
+            },
+            **AuthenticatedAPIView.get_500_errors(),
+        }
+    )
     def put(self, request, format=None):
         user = request.user
         data = request.data
@@ -205,7 +337,25 @@ class UpdateItemView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class RemoveItemView(APIView):
+class RemoveItemView(AuthenticatedAPIView):
+
+    @extend_schema(
+        description="Remove a product from the cart",
+        responses={
+            200: CartItemsResponseSerializer,
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+
+                    "type": "object",
+                            "properties": {
+                                "error": {"type": "string"}
+                            },
+                "example": {"error": "Product with this ID does not exist"}
+
+            },
+            **AuthenticatedAPIView.get_500_errors(),
+        }
+    )
     def delete(self, request, productId, format=None):
         user = request.user
 
@@ -261,7 +411,33 @@ class RemoveItemView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class EmptyCartView(APIView):
+class EmptyCartView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Empty the user cart",
+        responses={
+            200: {
+
+                    "type": "object",
+                    "properties": {
+                        "success": {"type": "string"}
+                    },
+                "example": {"success": "Cart emptied successfully"}
+
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            409: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+
+                "example": {"error": "Your cart is already empty"}
+            },
+
+            **AuthenticatedAPIView.get_500_errors(),
+        },
+    )
     def delete(self, request, format=None):
         user = request.user
 
@@ -285,7 +461,33 @@ class EmptyCartView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class SyncCartView(APIView):
+class SyncCartView(AuthenticatedAPIView):
+
+    @extend_schema(
+        description="Synchronize the user cart with the provided data",
+        responses={
+            201: {
+
+                    "type": "object",
+                            "properties": {
+                                "success": {"type": "string"}
+                            },
+                "example": {"success": "Cart Synchronized"}
+
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {"error": "Product with this ID does not exist"}
+
+            },
+            **AuthenticatedAPIView.get_500_errors(),
+        }
+    )
     def put(self, request, format=None):
         user = request.user
         data = request.data

@@ -2,13 +2,33 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
 from apps.product.models import Product
+from apps.reviews.serializers import ReviewSerializer
+from core.views import AuthenticatedAPIView, CustomAPIView
 from .models import Review
 from apps.orders.models import OrderItem
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.types import OpenApiTypes
 
 
-class GetProductReviewsView(APIView):
-    permission_classes = (permissions.AllowAny, )
+class GetProductReviewsView(CustomAPIView):
+    @extend_schema(
+        description="Get all reviews for a product",
+        responses={200:  ReviewSerializer(many=True),
+                   404: {
 
+            "type": "object",
+            "properties": {
+                    "error": {"type": "string"}
+            },
+            "example": [
+                {"error": "Product ID must be an integer"},
+                {"error": "This product does not exist"}
+            ]
+
+        },
+            **CustomAPIView.get_500_errors(),
+        },
+    )
     def get(self, request, productId, format=None):
         try:
             product_id = int(productId)
@@ -57,7 +77,25 @@ class GetProductReviewsView(APIView):
             )
 
 
-class GetProductReviewView(APIView):
+class GetProductReviewView(CustomAPIView):
+    @extend_schema(
+        description="Get review for a product",
+        responses={200:  ReviewSerializer,
+                   404: {
+
+                       "type": "object",
+                       "properties": {
+                               "error": {"type": "string"}
+                       },
+                       "example": [
+                           {"error": "Product ID must be an integer"},
+                           {"error": "This product does not exist"}
+                       ]
+
+                   },
+                   **CustomAPIView.get_500_errors(),
+                   },
+    )
     def get(self, request, productId, format=None):
         user = self.request.user
 
@@ -100,7 +138,75 @@ class GetProductReviewView(APIView):
             )
 
 
-class CreateProductReviewView(APIView):
+class CreateProductReviewView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Create a review for a product. Only users who have purchased the product can leave a review.",
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "rating": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "The rating for the product (decimal value).",
+                        "example": 4.5
+                    },
+                    "comment": {
+                        "type": "string",
+                        "description": "The comment for the review.",
+                        "example": "Excellent product! Highly recommend it."
+                    }
+                },
+                "required": ["rating", "comment"]
+            }
+        },
+        responses={
+            201: inline_serializer(
+                name="ReviewResponse",
+                fields={
+                    "result": ReviewSerializer(),
+                    "reviews": ReviewSerializer(many=True)
+                },
+            ),
+            400: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": [
+                    {"error": "Rating must be a decimal value"},
+                    {"error": "Must pass a comment when creating review"},
+                    {"error": "You must have purchased this product to review it"}
+                ]
+
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example":
+                    {"error": "This Product does not exist"}
+
+
+            },
+            409: {
+
+                    "type": "object",
+                            "properties": {
+                                "error": {"type": "string"}
+                            },
+                "example":
+                    {"error": "Review for this course already created"}
+
+
+            },
+            **AuthenticatedAPIView.get_500_errors()
+        }
+    )
     def post(self, request, productId, format=None):
         user = self.request.user
         data = self.request.data
@@ -183,7 +289,75 @@ class CreateProductReviewView(APIView):
             )
 
 
-class UpdateProductReviewView(APIView):
+class UpdateProductReviewView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Update a review for a product.",
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "rating": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "The rating for the product (decimal value).",
+                        "example": 4.5
+                    },
+                    "comment": {
+                        "type": "string",
+                        "description": "The comment for the review.",
+                        "example": "Excellent product! Highly recommend it."
+                    }
+                }
+            }
+        },
+        responses={
+            201: inline_serializer(
+                name="ReviewResponse",
+                fields={
+                    "result": ReviewSerializer(),
+                    "reviews": ReviewSerializer(many=True)
+                },
+            ),
+            400: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": [
+                    {"error": "Rating must be a decimal value"},
+                    {"error": "Must pass a comment when creating review"},
+                    {"error": "You must have purchased this product to review it"}
+                ]
+
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example":
+                    [{"error": "This Product does not exist"}, {
+                        "error": "Review for this product does not exist"}]
+
+
+            },
+            409: {
+
+                    "type": "object",
+                            "properties": {
+                                "error": {"type": "string"}
+                            },
+                "example":
+                    {"error": "Review for this course already created"}
+
+
+            },
+            **AuthenticatedAPIView.get_500_errors()
+        }
+    )
     def put(self, request, productId, format=None):
         user = self.request.user
         data = self.request.data
@@ -273,7 +447,27 @@ class UpdateProductReviewView(APIView):
             )
 
 
-class DeleteProductReviewView(APIView):
+class DeleteProductReviewView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Get review for a product",
+        responses={200:  ReviewSerializer(many=True),
+                   **AuthenticatedAPIView.get_auth_responses(),
+                   404: {
+
+            "type": "object",
+            "properties": {
+                "error": {"type": "string"}
+            },
+                       "example": [
+                           {"error": "Product ID must be an integer"},
+                           {"error": "This product does not exist"},
+                           {'error': 'Review for this product does not exist'}
+            ]
+
+        },
+            **AuthenticatedAPIView.get_500_errors(),
+        },
+    )
     def delete(self, request, productId, format=None):
         user = self.request.user
 
@@ -330,9 +524,8 @@ class DeleteProductReviewView(APIView):
             )
 
 
-class FilterProductReviewsView(APIView):
-    permission_classes = (permissions.AllowAny, )
-
+class FilterProductReviewsView(AuthenticatedAPIView):
+    @extend_schema(exclude=True)
     def get(self, request, productId, format=None):
         try:
             product_id = int(productId)

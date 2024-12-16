@@ -1,11 +1,42 @@
+from calendar import c
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from core.views import CustomAPIView
 from .models import FixedPriceCoupon, PercentageCoupon
 from .serializers import FixedPriceCouponSerializer, PercentageCouponSerializer
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 
-class CheckCouponView(APIView):
+class CheckCouponView(CustomAPIView):
+    @extend_schema(
+        description="Check if a coupon code exists and returns its details. Supports both Fixed Price and Percentage coupons.",
+        parameters=[
+            OpenApiParameter(
+                name="coupon_name",
+                description="The name of the coupon to check.",
+                required=True,
+                type=str,
+            )
+        ],
+        responses={
+            200: FixedPriceCouponSerializer,
+            404: {
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {
+                    "error": "Coupon code not found"
+                }
+            },
+            **CustomAPIView.get_500_errors(),
+        },
+    )
     def get(self, request, format=None):
         try:
             coupon_name = request.query_params.get('coupon_name')

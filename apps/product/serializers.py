@@ -23,7 +23,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'get_thumbnail'
         ]
 
-    def get_photo(self, obj):
+    def get_photo(self, obj) -> str:
         # Asegúrate de que la URL esté correctamente formateada antes de devolverla
         photo_url = obj.photo
         if photo_url.startswith("/"):

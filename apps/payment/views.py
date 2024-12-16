@@ -1,5 +1,3 @@
-from django.shortcuts import render
-from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,16 +7,18 @@ from apps.orders.models import Order, OrderItem
 from apps.product.models import Product
 from apps.shipping.models import Shipping
 from django.core.mail import send_mail
-from apps.user.serializers import UserAccountSerializer
 import uuid
 import os
 import jwt
-import datetime
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+
+from core.views import AuthenticatedAPIView
 
 payment_key = os.environ.get("PAYMENT_KEY")
 
 
 class GenerateTokenView(APIView):
+    @extend_schema(exclude=True)
     def get(self, request, format=None):
         user = self.request.user
 
@@ -39,7 +39,80 @@ class GenerateTokenView(APIView):
             )
 
 
-class GetPaymentTotalView(APIView):
+class GetPaymentTotalView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Get the total amount of the payment including tax, shipping, and coupon discounts.",
+        parameters=[
+            OpenApiParameter(
+                name="shipping_id",
+                description="The ID of the shipping option.",
+                required=True,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="coupon_name",
+                description="The name of the coupon to apply.",
+                required=False,
+                type=str,
+            )
+        ],
+        responses={
+            200: {
+
+                "type": "object",
+                "properties": {
+                    "original_price": {"type": "string"},
+                    "total_after_coupon": {"type": "string"},
+                    "estimated_tax": {"type": "string"},
+                    "shipping_cost": {"type": "string"},
+                    "final_total_amount": {"type": "string"},
+                    "total_compare_amount": {"type": "string"}
+                },
+                "example": {
+                    "original_price": "100.00",
+                    "total_after_coupon": "90.00",
+                    "estimated_tax": "0.19",
+                    "shipping_cost": "5.00",
+                    "final_total_amount": "95.00",
+                    "total_compare_amount": "120.00"
+                }
+
+            },
+            200: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+
+                "example": {"error": "Not enough Adidas blue items in stock"}
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+
+                "example": {"error": "Need to have items in cart"}
+
+
+            },
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+
+                "example": {"error": "A proudct with ID 1 does not exist"}
+
+
+            },
+            **AuthenticatedAPIView.get_500_errors(),
+        }
+    )
     def get(self, request, format=None):
         user = self.request.user
 
@@ -141,7 +214,69 @@ class GetPaymentTotalView(APIView):
             )
 
 
-class ProcessPaymentView(APIView):
+class ProcessPaymentView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Process the checkout by validating the shipping, coupon, and cart items, then creating the order.",
+        parameters=[
+            OpenApiParameter(
+                name="shipping_id",
+                description="The ID of the selected shipping option.",
+                required=True,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="coupon_name",
+                description="The name of the coupon to apply (optional).",
+                required=False,
+                type=str,
+            ),
+        ],
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "success": {"type": "string"}
+                },
+                "example": {"error": "Transaction successful and order was created"}
+            },
+
+            400: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+
+                "example": {
+                    "insufficient_stock":
+                    {"error": "Not enough Adidas blue items in stock"},
+
+                    "transaction_failure":  {"error": "Transaction failed"}
+
+                }
+            },
+            **AuthenticatedAPIView.get_auth_responses(),
+            404: {
+                "type": "object",
+                "properties": {
+                        "error": {"type": "string"}
+                },
+                "example": [{"error": "Need to have items in cart"}, {"error": "Transaction failed, a product ID 1 does not exist"}, {"error": "Invalid shipping option"}],
+
+            },
+            500: {
+
+                "type": "object",
+                "properties": {
+                        "error": {"type": "string"}
+                },
+                "example":
+                    [{"error": "Something is wrong with the payment"}, {"error": "Transaction succeeded but failed to create the order"}, {"error": "Transaction succeeded and order created, but failed to create an order item"}, {
+                        "error": "Transaction succeeded and order created, but failed to send email"}, {"error": "Transaction succeeded and order successful, but failed to clear cart"}]
+
+            }
+        }
+    )
     def post(self, request, format=None):
         user = self.request.user
         data = self.request.data

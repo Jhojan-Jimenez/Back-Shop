@@ -42,10 +42,10 @@ class UserAccount(AbstractBaseUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
-    def get_full_name(self):
+    def get_full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
-    
-    def get_short_name(self):
+
+    def get_short_name(self) -> str:
         return self.first_name
 
     def has_perm(self, perm, obj=None):

@@ -1,15 +1,23 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
+from drf_spectacular.utils import extend_schema
 
+from core.views import CustomAPIView
+
+from .serializers import CategorySerializer
 from .models import Category
 
 
-class ListCategoriesView(APIView):
-    # En el config, tenemos que necesitan permiso, con eso lo denienga
-    permission_classes = (permissions.AllowAny, )
+class ListCategoriesView(CustomAPIView):
 
+    @extend_schema(
+        description="Get all categories",
+        responses={200: CategorySerializer(many=True),
+                   **CustomAPIView.get_500_errors(),
+                   },
+
+    )
     def get(self, request, format=None):
         if Category.objects.all().exists():
             categories = Category.objects.all()

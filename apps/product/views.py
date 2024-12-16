@@ -2,15 +2,33 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import permissions
+
+from core.views import CustomAPIView
 from .serializers import ProductSerializer
 from .models import Product
 from apps.category.models import Category
 from django.db.models import Q
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 
-class ProductDetailView(APIView):
-    permission_classes = (permissions.AllowAny, )
+class ProductDetailView(CustomAPIView):
+    @extend_schema(
+        description="Get detail about one product",
+        responses={
+            200: ProductSerializer,
+            404: {
 
+                    "type": "object",
+                            "properties": {
+                                "error": {"type": "string"}
+                            },
+                "example": {"error": "Product with this ID does not exist"}
+
+            },
+            **CustomAPIView.get_500_errors()
+        }
+    )
     def get(self, request, productId, format=None):
         try:
             product_id = int(productId)
@@ -32,9 +50,7 @@ class ProductDetailView(APIView):
 # Products sort
 
 
-class ListProductsView(APIView):
-    permission_classes = (permissions.AllowAny, )
-
+class ListProductsView(CustomAPIView):
     def get(self, request, format=None):
         if Product.objects.all().exists():
 
@@ -138,10 +154,26 @@ class ListSearchView(APIView):
 
 
 # With an ID product, select it category and found products with the same category
-class ListRelatedView(APIView):
+class ListRelatedView(CustomAPIView):
+    @extend_schema(
+        description="Retrieve a list of related products for a specific product ID based on its category, Max 3 for request.",
+        responses={
+            200: ProductSerializer(many=True),
+            404: {
 
-    permission_classes = (permissions.AllowAny, )
+                    "type": "object",
+                    "properties": {
+                        "error": {"type": "string"}
+                    },
+                "example": [{
+                    "no_products":  {"error": "Product ID must be an integer"}},
+                    {"invalid_limit":  {"error": "Product with this product ID does not exist"}
+                     }]
 
+            },
+            **CustomAPIView.get_500_errors()
+        }
+    )
     def get(self, request, productId, format=None):
         try:
             product_id = int(productId)
@@ -205,9 +237,43 @@ class ListRelatedView(APIView):
 # Filter with cateogri, price range, sort and order
 
 
-class ListBySearchView(APIView):
-    permission_classes = (permissions.AllowAny, )
+class ListBySearchView(CustomAPIView):
+    @extend_schema(
+        description="Filter and retrieve products based on category, price range, sorting, and search parameters.",
+        request={
+            "application/json": {
+                "type": "object",
+                "properties": {
+                    "categoryId": {"type": "integer", "example": 0},
+                    "priceRange": {"type": "string", "example": "100000 - 200000"},
+                    "sortBy": {"type": "string", "enum": ["date_created"], "example": ["date_created", "price", "sold", "name", "rating"]},
+                    "order": {"type": "string", "enum": ["asc"], "example": ["asc", "desc"]},
+                    "search": {"type": "string", "description": "adidas"}
+                },
+                "required": ["categoryId"]
+            }
+        },
+        responses={
+            200: ProductSerializer(many=True),
+            404: {
 
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": [
+                    {"invalid_category_id": {
+                        "error": "Category ID must be an integer"}},
+                    {"invalid_category": {
+                        "error": "This category does not exist"}},
+                    {"invalid_price_range": {
+                        "error": "Invalid price range format"}}
+                ]
+
+            },
+            **CustomAPIView.get_500_errors()
+        }
+    )
     def post(self, request, format=None):
         data = self.request.data
 

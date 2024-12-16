@@ -1,11 +1,31 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from core.views import AuthenticatedAPIView
 from .models import Order, OrderItem
 from .contries import Countries
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 
 class GetCountriesView(APIView):
+    @extend_schema(
+        description="Get all available countries.",
+        responses={
+            200: {
+                    "type": "object",
+                            "properties": {
+                                "countries": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                "example": {"countries": ["Argentina", "Brazil", "Colombia"]}
+            }
+        }
+    )
     def get(self, request, format=None):
         return Response(
             {'countries': [country[1]
@@ -14,7 +34,48 @@ class GetCountriesView(APIView):
         )
 
 
-class ListOrdersView(APIView):
+class ListOrdersView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Get all user's orders",
+        responses={
+            200: {
+
+                    "type": "object",
+                            "properties": {
+                                "orders": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "status": {"type": "string"},
+                                            "transaction_id": {"type": "string"},
+                                            "amount": {"type": "number"},
+                                            "shipping_price": {"type": "number"},
+                                            "date_issued": {"type": "string", "format": "date-time"},
+                                            "address_line_1": {"type": "string"},
+                                            "address_line_2": {"type": "string"},
+                                        }
+                                    }
+                                }
+                            },
+                "example": {
+                    "orders": [
+                        {
+                            "status": "Pending",
+                            "transaction_id": "TX12345",
+                            "amount": 100.00,
+                            "shipping_price": 10.00,
+                            "date_issued": "2024-12-13T11:45:00Z",
+                            "address_line_1": "123 Main St",
+                            "address_line_2": "Apt 2B"
+                        }
+                    ]
+                            }
+
+            },
+            **AuthenticatedAPIView.get_500_errors()
+        }
+    )
     def get(self, request, format=None):
         user = self.request.user
         try:
@@ -44,7 +105,93 @@ class ListOrdersView(APIView):
             )
 
 
-class ListOrderDetailView(APIView):
+class ListOrderDetailView(AuthenticatedAPIView):
+    @extend_schema(
+        description="Get details about one order",
+        parameters=[
+            OpenApiParameter(
+                "transactionId",
+                type=OpenApiTypes.STR,
+                required=True,
+                description="Transaction ID of the order to be retrieved.",
+                location=OpenApiParameter.PATH
+            )
+        ],
+        responses={
+            200: {
+
+                "type": "object",
+                "properties": {
+                    "order": {
+                        "type": "object",
+                        "properties": {
+                            "status": {"type": "string"},
+                            "transaction_id": {"type": "string"},
+                            "amount": {"type": "number"},
+                            "full_name": {"type": "string"},
+                            "address_line_1": {"type": "string"},
+                            "address_line_2": {"type": "string"},
+                            "city": {"type": "string"},
+                            "state_province_region": {"type": "string"},
+                            "postal_zip_code": {"type": "string"},
+                            "country_region": {"type": "string"},
+                            "telephone_number": {"type": "string"},
+                            "shipping_name": {"type": "string"},
+                            "shipping_time": {"type": "string"},
+                            "shipping_price": {"type": "number"},
+                            "date_issued": {"type": "string", "format": "date-time"},
+                            "coupon_discount": {"type": "number"},
+                            "order_items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "price": {"type": "number"},
+                                        "count": {"type": "integer"},
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "example": {
+                    "order": {
+                        "status": "Pending",
+                        "transaction_id": "TX12345",
+                        "amount": 100.00,
+                        "full_name": "John Doe",
+                        "order_items": [
+                            {
+                                "name": "T-Shirt",
+                                        "price": 20.00,
+                                        "count": 2
+                            },
+                        ]
+                    }
+                }
+
+            },
+            404: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {"error": "Order with this transaction ID does not exist"}
+
+            },
+            500: {
+
+                "type": "object",
+                "properties": {
+                    "error": {"type": "string"}
+                },
+                "example": {"error": "Something went wrong when retrieving order detail"}
+            }
+
+        }
+    )
     def get(self, request, transactionId, format=None):
         user = self.request.user
 
