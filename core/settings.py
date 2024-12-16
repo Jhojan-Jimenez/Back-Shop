@@ -188,7 +188,7 @@ DJOSER = {
 SPECTACULAR_SETTINGS = {
     'DEFAULT_SCHEMA_CLASS': "core.views.CustomAutoSchema",
     'TITLE': 'MortShop API',
-    'DESCRIPTION': 'API para gestionar un e-commerce moderno con funcionalidades como gestión de productos, autenticación segura, integración con servicios de terceros (Brevo para correos y Imgur para imágenes) y consultas optimizadas en PostgreSQL. Desarrollada con Django y accesible en mortshop.onrender.com.',
+    'DESCRIPTION': 'API for managing a modern e-commerce platform with features such as product management, secure authentication, integration with third-party services (Brevo for emails and Imgur for images), and optimized queries in PostgreSQL. Developed with Django and accessible at mortshop.onrender.com.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'SCHEMA_PATH_PREFIX': '/api',
