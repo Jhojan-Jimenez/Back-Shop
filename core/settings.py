@@ -206,6 +206,11 @@ SPECTACULAR_SETTINGS = {
             },
         },
     },
+    'SWAGGER_UI_SETTINGS': {
+        'displayRequestDuration': False,  # Hide duration of requests
+        'showExtensions': False,  # Hide extensions
+        'supportedSubmitMethods': []
+    },
 }
 
 

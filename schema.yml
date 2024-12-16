@@ -1,0 +1,2750 @@
+openapi: 3.0.3
+info:
+  title: MortShop API
+  version: 1.0.0
+  description: API para gestionar un e-commerce moderno con funcionalidades como gestión
+    de productos, autenticación segura, integración con servicios de terceros (Brevo
+    para correos y Imgur para imágenes) y consultas optimizadas en PostgreSQL. Desarrollada
+    con Django y accesible en mortshop.onrender.com.
+paths:
+  /api/cart/SyncCart:
+    put:
+      operationId: cart_SyncCart_update
+      description: Synchronize the user cart with the provided data
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                example:
+                  success: Cart Synchronized
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Product with this ID does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/cart/add-item:
+    post:
+      operationId: cart_add_item_create
+      description: Add a product to the user cart
+      parameters:
+      - in: query
+        name: product_id
+        schema:
+          type: integer
+        description: ID of the product to add to the cart.
+        required: true
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                example:
+                  message: Product successfully added to your cart
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Product ID must be an integer
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Product with this ID does not exist
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Not enough of this item in stock
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/cart/cart-items:
+    get:
+      operationId: cart_cart_items_retrieve
+      description: Get all items in the user cart
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItemsResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/cart/empty-cart:
+    delete:
+      operationId: cart_empty_cart_destroy
+      description: Empty the user cart
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                example:
+                  success: Cart emptied successfully
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Your cart is already empty
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/cart/remove-item/{productId}:
+    delete:
+      operationId: cart_remove_item_destroy
+      description: Remove a product from the cart
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: string
+        required: true
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItemsResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Product with this ID does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/cart/total:
+    get:
+      operationId: cart_total_retrieve
+      description: Get the total cost of items in the cart
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: integer
+                example:
+                  total_cost: '195000'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/cart/total-items:
+    get:
+      operationId: cart_total_items_retrieve
+      description: Get the total number of items in the cart
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: integer
+                example:
+                  total_items: '10'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/cart/update-item:
+    put:
+      operationId: cart_update_item_update
+      description: Update the count of a product in the cart
+      tags:
+      - cart
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItemsResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Not enough of this item in stock
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Product with this ID does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/category/categories:
+    get:
+      operationId: category_categories_list
+      description: Get all categories
+      tags:
+      - category
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/coupons/check-coupon:
+    get:
+      operationId: coupons_check_coupon_retrieve
+      description: Check if a coupon code exists and returns its details. Supports
+        both Fixed Price and Percentage coupons.
+      parameters:
+      - in: query
+        name: coupon_name
+        schema:
+          type: string
+        description: The name of the coupon to check.
+        required: true
+      tags:
+      - coupons
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FixedPriceCoupon'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Coupon code not found
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/orders/:
+    get:
+      operationId: orders_retrieve
+      description: Get all user's orders
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        status:
+                          type: string
+                        transaction_id:
+                          type: string
+                        amount:
+                          type: number
+                        shipping_price:
+                          type: number
+                        date_issued:
+                          type: string
+                          format: date-time
+                        address_line_1:
+                          type: string
+                        address_line_2:
+                          type: string
+                example:
+                  orders:
+                  - status: Pending
+                    transaction_id: TX12345
+                    amount: 100.0
+                    shipping_price: 10.0
+                    date_issued: '2024-12-13T11:45:00Z'
+                    address_line_1: 123 Main St
+                    address_line_2: Apt 2B
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/orders/{transactionId}/detail:
+    get:
+      operationId: orders_detail_retrieve
+      description: Get details about one order
+      parameters:
+      - in: path
+        name: transactionId
+        schema:
+          type: string
+        description: Transaction ID of the order to be retrieved.
+        required: true
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                      transaction_id:
+                        type: string
+                      amount:
+                        type: number
+                      full_name:
+                        type: string
+                      address_line_1:
+                        type: string
+                      address_line_2:
+                        type: string
+                      city:
+                        type: string
+                      state_province_region:
+                        type: string
+                      postal_zip_code:
+                        type: string
+                      country_region:
+                        type: string
+                      telephone_number:
+                        type: string
+                      shipping_name:
+                        type: string
+                      shipping_time:
+                        type: string
+                      shipping_price:
+                        type: number
+                      date_issued:
+                        type: string
+                        format: date-time
+                      coupon_discount:
+                        type: number
+                      order_items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            price:
+                              type: number
+                            count:
+                              type: integer
+                example:
+                  order:
+                    status: Pending
+                    transaction_id: TX12345
+                    amount: 100.0
+                    full_name: John Doe
+                    order_items:
+                    - name: T-Shirt
+                      price: 20.0
+                      count: 2
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Order with this transaction ID does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving order detail
+          description: ''
+  /api/orders/countries:
+    get:
+      operationId: orders_countries_retrieve
+      description: Get all available countries.
+      tags:
+      - orders
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  countries:
+                    type: array
+                    items:
+                      type: string
+                example:
+                  countries:
+                  - Argentina
+                  - Brazil
+                  - Colombia
+          description: ''
+  /api/payment/make-payment:
+    post:
+      operationId: payment_make_payment_create
+      description: Process the checkout by validating the shipping, coupon, and cart
+        items, then creating the order.
+      parameters:
+      - in: query
+        name: coupon_name
+        schema:
+          type: string
+        description: The name of the coupon to apply (optional).
+      - in: query
+        name: shipping_id
+        schema:
+          type: string
+        description: The ID of the selected shipping option.
+        required: true
+      tags:
+      - payment
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                example:
+                  error: Transaction successful and order was created
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  insufficient_stock:
+                    error: Not enough Adidas blue items in stock
+                  transaction_failure:
+                    error: Transaction failed
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Need to have items in cart
+                - error: Transaction failed, a product ID 1 does not exist
+                - error: Invalid shipping option
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Something is wrong with the payment
+                - error: Transaction succeeded but failed to create the order
+                - error: Transaction succeeded and order created, but failed to create
+                    an order item
+                - error: Transaction succeeded and order created, but failed to send
+                    email
+                - error: Transaction succeeded and order successful, but failed to
+                    clear cart
+          description: ''
+  /api/payment/payment-total:
+    get:
+      operationId: payment_payment_total_retrieve
+      description: Get the total amount of the payment including tax, shipping, and
+        coupon discounts.
+      parameters:
+      - in: query
+        name: coupon_name
+        schema:
+          type: string
+        description: The name of the coupon to apply.
+      - in: query
+        name: shipping_id
+        schema:
+          type: string
+        description: The ID of the shipping option.
+        required: true
+      tags:
+      - payment
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Not enough Adidas blue items in stock
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: A proudct with ID 1 does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/product/{productId}:
+    get:
+      operationId: product_retrieve
+      description: Get detail about one product
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Product with this ID does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/product/products:
+    post:
+      operationId: product_products_create
+      description: Filter and retrieve products based on category, price range, sorting,
+        and search parameters.
+      tags:
+      - product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoryId:
+                  type: integer
+                  example: 0
+                priceRange:
+                  type: string
+                  example: 100000 - 200000
+                sortBy:
+                  type: string
+                  enum:
+                  - date_created
+                  example:
+                  - date_created
+                  - price
+                  - sold
+                  - name
+                  - rating
+                order:
+                  type: string
+                  enum:
+                  - asc
+                  example:
+                  - asc
+                  - desc
+                search:
+                  type: string
+                  description: adidas
+              required:
+              - categoryId
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - invalid_category_id:
+                    error: Category ID must be an integer
+                - invalid_category:
+                    error: This category does not exist
+                - invalid_price_range:
+                    error: Invalid price range format
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/product/related/{productId}:
+    get:
+      operationId: product_related_list
+      description: Retrieve a list of related products for a specific product ID based
+        on its category, Max 3 for request.
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - product
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - no_products:
+                    error: Product ID must be an integer
+                - invalid_limit:
+                    error: Product with this product ID does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/reviews/create-review/{productId}:
+    post:
+      operationId: reviews_create_review_create
+      description: Create a review for a product. Only users who have purchased the
+        product can leave a review.
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: number
+                  format: float
+                  description: The rating for the product (decimal value).
+                  example: 4.5
+                comment:
+                  type: string
+                  description: The comment for the review.
+                  example: Excellent product! Highly recommend it.
+              required:
+              - rating
+              - comment
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Rating must be a decimal value
+                - error: Must pass a comment when creating review
+                - error: You must have purchased this product to review it
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: This Product does not exist
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Review for this course already created
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/reviews/delete-review/{productId}:
+    delete:
+      operationId: reviews_delete_review_destroy
+      description: Get review for a product
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Product ID must be an integer
+                - error: This product does not exist
+                - error: Review for this product does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/reviews/get-review/{productId}:
+    get:
+      operationId: reviews_get_review_retrieve
+      description: Get review for a product
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Product ID must be an integer
+                - error: This product does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/reviews/get-reviews/{productId}:
+    get:
+      operationId: reviews_get_reviews_list
+      description: Get all reviews for a product
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Product ID must be an integer
+                - error: This product does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/reviews/update-review/{productId}:
+    put:
+      operationId: reviews_update_review_update
+      description: Update a review for a product.
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - reviews
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: number
+                  format: float
+                  description: The rating for the product (decimal value).
+                  example: 4.5
+                comment:
+                  type: string
+                  description: The comment for the review.
+                  example: Excellent product! Highly recommend it.
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Rating must be a decimal value
+                - error: Must pass a comment when creating review
+                - error: You must have purchased this product to review it
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: This Product does not exist
+                - error: Review for this product does not exist
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Review for this course already created
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/shipping/shipping-options:
+    get:
+      operationId: shipping_shipping_options_list
+      description: Get all available shipping options.
+      tags:
+      - shipping
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Shipping'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: No shipping options available
+          description: ''
+  /api/wishlist/:
+    get:
+      operationId: wishlist_list
+      description: Get all products in user's wishlist
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WishListItem'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: This product does not exist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/wishlist/add-item:
+    post:
+      operationId: wishlist_add_item_create
+      description: Add product to user's wishlist
+      tags:
+      - wishlist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                  example: 0
+              required:
+              - product_id
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WishListItem'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: This product does not exist
+                - error: Product ID must be an integer
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Item already in wishlist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/wishlist/exist-item/{productId}:
+    get:
+      operationId: wishlist_exist_item_retrieve
+      description: Search if product exists in user's wishlist
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: false
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Product ID must be an integer
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /api/wishlist/remove-item/{productId}:
+    delete:
+      operationId: wishlist_remove_item_destroy
+      description: Remove product from user's wishlist
+      parameters:
+      - in: path
+        name: productId
+        schema:
+          type: integer
+        required: true
+      tags:
+      - wishlist
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WishListItem'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                description: Unauthorized
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  error: Authentication credentials were not provided.
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                - error: Product ID must be an integer
+                - error: Product with this ID does not exist
+                - error: This product is not in your wishlist
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: Something went wrong when retrieving cart items
+          description: ''
+  /auth/jwt/create/:
+    post:
+      operationId: auth_jwt_create_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /auth/jwt/refresh/:
+    post:
+      operationId: auth_jwt_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /auth/jwt/verify/:
+    post:
+      operationId: auth_jwt_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /auth/o/{provider}/:
+    get:
+      operationId: auth_o_retrieve
+      parameters:
+      - in: path
+        name: provider
+        schema:
+          type: string
+          pattern: ^\S+$
+        required: true
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderAuth'
+          description: ''
+    post:
+      operationId: auth_o_create
+      parameters:
+      - in: path
+        name: provider
+        schema:
+          type: string
+          pattern: ^\S+$
+        required: true
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderAuth'
+          description: ''
+  /auth/users/:
+    get:
+      operationId: auth_users_list
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserCreate'
+          description: ''
+    post:
+      operationId: auth_users_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreatePasswordRetypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserCreatePasswordRetypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserCreatePasswordRetypeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreatePasswordRetype'
+          description: ''
+  /auth/users/{id}/:
+    get:
+      operationId: auth_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user account.
+        required: true
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+    put:
+      operationId: auth_users_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user account.
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+    patch:
+      operationId: auth_users_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user account.
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserCreateRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+    delete:
+      operationId: auth_users_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user account.
+        required: true
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /auth/users/activation/:
+    post:
+      operationId: auth_users_activation_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActivationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activation'
+          description: ''
+  /auth/users/me/:
+    get:
+      operationId: auth_users_me_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+    put:
+      operationId: auth_users_me_update
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+    patch:
+      operationId: auth_users_me_partial_update
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserCreateRequest'
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCreate'
+          description: ''
+    delete:
+      operationId: auth_users_me_destroy
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /auth/users/resend_activation/:
+    post:
+      operationId: auth_users_resend_activation_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEmailReset'
+          description: ''
+  /auth/users/reset_email/:
+    post:
+      operationId: auth_users_reset_email_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEmailReset'
+          description: ''
+  /auth/users/reset_email_confirm/:
+    post:
+      operationId: auth_users_reset_email_confirm_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsernameResetConfirmRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UsernameResetConfirmRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UsernameResetConfirmRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsernameResetConfirm'
+          description: ''
+  /auth/users/reset_password/:
+    post:
+      operationId: auth_users_reset_password_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendEmailResetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendEmailReset'
+          description: ''
+  /auth/users/reset_password_confirm/:
+    post:
+      operationId: auth_users_reset_password_confirm_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRetypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRetypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRetypeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetConfirmRetype'
+          description: ''
+  /auth/users/set_email/:
+    post:
+      operationId: auth_users_set_email_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUsernameRetypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetUsernameRetypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetUsernameRetypeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetUsernameRetype'
+          description: ''
+  /auth/users/set_password/:
+    post:
+      operationId: auth_users_set_password_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPasswordRetypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetPasswordRetypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetPasswordRetypeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetPasswordRetype'
+          description: ''
+components:
+  schemas:
+    Activation:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+      required:
+      - token
+      - uid
+    ActivationRequest:
+      type: object
+      properties:
+        uid:
+          type: string
+          minLength: 1
+        token:
+          type: string
+          minLength: 1
+      required:
+      - token
+      - uid
+    CartItemsResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductItem'
+      required:
+      - products
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        sub_categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubCategory'
+      required:
+      - id
+      - name
+      - sub_categories
+    FixedPriceCoupon:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        discount_price:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+      - discount_price
+      - name
+    PasswordResetConfirmRetype:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+        new_password:
+          type: string
+        re_new_password:
+          type: string
+      required:
+      - new_password
+      - re_new_password
+      - token
+      - uid
+    PasswordResetConfirmRetypeRequest:
+      type: object
+      properties:
+        uid:
+          type: string
+          minLength: 1
+        token:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          minLength: 1
+        re_new_password:
+          type: string
+          minLength: 1
+      required:
+      - new_password
+      - re_new_password
+      - token
+      - uid
+    PatchedUserCreateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        photo:
+          type: string
+          readOnly: true
+        description:
+          type: string
+        price:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        compare_price:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        category:
+          type: integer
+        quantity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        sold:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        date_created:
+          type: string
+          format: date-time
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,1})?$
+        get_thumbnail:
+          type: string
+          readOnly: true
+      required:
+      - category
+      - compare_price
+      - description
+      - name
+      - price
+    ProductItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        count:
+          type: integer
+        product:
+          $ref: '#/components/schemas/Product'
+      required:
+      - count
+      - id
+      - product
+    ProviderAuth:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+        user:
+          type: string
+          readOnly: true
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,1})?$
+        comment:
+          type: string
+        date_created:
+          type: string
+          format: date-time
+        user:
+          type: integer
+        product:
+          type: integer
+      required:
+      - comment
+      - product
+      - rating
+      - user
+    ReviewResponse:
+      type: object
+      properties:
+        result:
+          $ref: '#/components/schemas/Review'
+        reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+      required:
+      - result
+      - reviews
+    SendEmailReset:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    SendEmailResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    SetPasswordRetype:
+      type: object
+      properties:
+        new_password:
+          type: string
+        re_new_password:
+          type: string
+        current_password:
+          type: string
+      required:
+      - current_password
+      - new_password
+      - re_new_password
+    SetPasswordRetypeRequest:
+      type: object
+      properties:
+        new_password:
+          type: string
+          minLength: 1
+        re_new_password:
+          type: string
+          minLength: 1
+        current_password:
+          type: string
+          minLength: 1
+      required:
+      - current_password
+      - new_password
+      - re_new_password
+    SetUsernameRetype:
+      type: object
+      properties:
+        current_password:
+          type: string
+        new_email:
+          type: string
+          format: email
+          title: Email
+          maxLength: 254
+        re_new_email:
+          type: string
+      required:
+      - current_password
+      - new_email
+      - re_new_email
+    SetUsernameRetypeRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+        new_email:
+          type: string
+          format: email
+          minLength: 1
+          title: Email
+          maxLength: 254
+        re_new_email:
+          type: string
+          minLength: 1
+      required:
+      - current_password
+      - new_email
+      - re_new_email
+    Shipping:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        time_to_delivery:
+          type: string
+          maxLength: 255
+        price:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - name
+      - price
+      - time_to_delivery
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    TokenVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - token
+    UserCreate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 255
+        last_name:
+          type: string
+          maxLength: 255
+        get_full_name:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - first_name
+      - last_name
+    UserCreatePasswordRetype:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 255
+        last_name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        id:
+          type: integer
+          readOnly: true
+        re_password:
+          type: string
+      required:
+      - email
+      - first_name
+      - last_name
+      - re_password
+    UserCreatePasswordRetypeRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        re_password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - first_name
+      - last_name
+      - password
+      - re_password
+    UserCreateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - email
+      - first_name
+      - last_name
+    UsernameResetConfirm:
+      type: object
+      properties:
+        new_email:
+          type: string
+          format: email
+          title: Email
+          maxLength: 254
+      required:
+      - new_email
+    UsernameResetConfirmRequest:
+      type: object
+      properties:
+        new_email:
+          type: string
+          format: email
+          minLength: 1
+          title: Email
+          maxLength: 254
+      required:
+      - new_email
+    WishListItem:
+      type: object
+      properties:
+        product:
+          allOf:
+          - $ref: '#/components/schemas/Product'
+          readOnly: true
+        id:
+          type: integer
+          readOnly: true
+  securitySchemes:
+    jwtAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "JWT"
