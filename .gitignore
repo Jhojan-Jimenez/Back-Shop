@@ -19,3 +19,9 @@ node_modules/
 *~
 
 /staticfiles/
+
+# Ignore Data files provided for initial setup
+data.py
+data.json
+data_images
+delete_data.py
