@@ -1,3 +1,5 @@
+from datetime import datetime
+from django.http import JsonResponse
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.openapi import AutoSchema
@@ -47,3 +49,9 @@ class AuthenticatedAPIView(CustomAPIView):
                 "example": {"error": "Authentication credentials were not provided."}
             }
         }
+
+
+def ping_view(request):
+    hora_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"✅ Ping recibido a {hora_actual}")
+    return JsonResponse({"message": "ok"}, status=200)
