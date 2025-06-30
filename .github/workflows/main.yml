@@ -1,0 +1,13 @@
+
+name: Keep Render Alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *' # Cada 10 minutos (en UTC)
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping /ping endpoint
+        run: curl -s https://mortshop.onrender.com/ping
