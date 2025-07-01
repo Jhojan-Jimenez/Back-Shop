@@ -1,5 +1,5 @@
 
-name: Keep Render Alive
+name: Keep Render Alive Back -Shop
 
 on:
   schedule:
@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping /ping endpoint
-        run: curl -s https://mortshop.onrender.com/ping
+        run: curl -L -s https://mortshop.onrender.com/ping
